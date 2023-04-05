@@ -5,7 +5,7 @@ using UnityEngine;
 // Movement of players using tiles
 public class PlayerMovement : MonoBehaviour {
     public static event Action<bool> OnChangeView;
-    
+    [SerializeField] private Animator anim;
     [SerializeField] private float moveSmoothFactor = 4f;
     [SerializeField] private float speedFactor = 1f;
     [SerializeField] private float yOffset = 1.5f;
@@ -23,8 +23,12 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     IEnumerator MoveAlongPath(Tile[ ] path) {
+        float t = 0.75f;
         OnChangeView?.Invoke(true);
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(t);
+        anim.CrossFade(Data.TAKEOFF_ANIM, 0);
+        yield return new WaitForSeconds(2.75f);
+        anim.CrossFade(Data.FLYFLOAT_ANIM, 0);
         Vector3 lastPosition = transform.position;
         int pathIdx = 0;
         while (pathIdx < path.Length) {
@@ -43,7 +47,13 @@ public class PlayerMovement : MonoBehaviour {
             lastPosition = nextTileOffset;
             pathIdx++;
         }
-        yield return new WaitForSeconds(1f);
+        anim.CrossFade(Data.LAND_ANIM, 0);
+        yield return new WaitForSeconds(2.5f);
+        anim.CrossFade(Data.IDLE_ANIM, 0);
         OnChangeView?.Invoke(false);
+    }
+    
+    bool AnimatorIsPlaying(){
+        return anim.GetCurrentAnimatorStateInfo(0).normalizedTime < 1;
     }
 }
