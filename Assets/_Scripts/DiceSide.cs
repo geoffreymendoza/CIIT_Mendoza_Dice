@@ -17,4 +17,6 @@ public class DiceSide : MonoBehaviour {
     public bool CheckGround() {
         return onGround;
     }
+
+    public int GetSideValue() => sideValue;
 }

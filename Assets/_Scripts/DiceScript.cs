@@ -1,19 +1,42 @@
+using System;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class DiceScript : MonoBehaviour {
+    public static event Action<int> OnDiceRoll;
+    
+    [Header("Dice Side")]
+    private DiceSide[] dsObj;
+    private int diceValue;
+    
+    [Header("Roll Force")]
+    [SerializeField] private Vector2 torqueValue;
+
     private Rigidbody rb;
     private Vector3 initialPos;
     private bool hasLanded;
     private bool hasThrown;
-    private int diceValue;
-    [SerializeField] private DiceSide[] dsObjects;
-    [SerializeField] private Vector2 torqueValue;
+    private bool readyToRoll;
+
+    private void Awake() {
+        PlayerMovement.OnChangeView += OnChangeView;
+    }
+    
+    private void OnDestroy() {
+        PlayerMovement.OnChangeView -= OnChangeView;
+    }
+    
+    private void OnChangeView(bool changeView) {
+        if (changeView) return;
+        ResetDice();
+    }
 
     private void Start() {
         rb = this.GetComponent<Rigidbody>();
         initialPos = transform.position;
-        dsObjects = GetComponentsInChildren<DiceSide>();
+        dsObj = GetComponentsInChildren<DiceSide>();
         rb.useGravity = false;
+        readyToRoll = true;
     }
 
     private void Update() {
@@ -22,16 +45,6 @@ public class DiceScript : MonoBehaviour {
 
         if (rb.IsSleeping())
             CheckDiceState();
-
-        // Original script for above
-        // if (rb.IsSleeping() && !hasLanded && hasThrown) {
-        //     hasLanded = true;
-        //     rb.isKinematic = true;
-        //     rb.useGravity = false;
-        // }
-        // else if (rb.IsSleeping() && hasLanded && diceValue == 0) {
-        //     RollAgain();
-        // }
     }
 
     private void CheckDiceState() {
@@ -43,16 +56,29 @@ public class DiceScript : MonoBehaviour {
         }
 
         if (hasLanded && diceValue == 0) {
-            RollAgain();
-            return;
+            // Debug.Log("stopped");
+            readyToRoll = false;
+            CheckDiceOnGround();
+            OnDiceRoll?.Invoke(diceValue);
+            //RollAgain();
+        }
+    }
+
+    void CheckDiceOnGround() {
+        foreach (var ds in dsObj) {
+            if (!ds.CheckGround())
+                continue;
+            diceValue = ds.GetSideValue();
+            break;
         }
     }
 
     private void RollDice() {
-        if (hasThrown && hasLanded) {
-            ResetDice();
-            return;
-        }
+        if (!readyToRoll) return;
+        // if (hasThrown && hasLanded) {
+        //     ResetDice();
+        //     return;
+        // }
         Roll();
     }
 
@@ -62,6 +88,7 @@ public class DiceScript : MonoBehaviour {
     }
 
     private void Roll() {
+        readyToRoll = false;
         hasThrown = true;
         rb.useGravity = true;
         rb.AddTorque(RandomTorqueAmount(torqueValue), RandomTorqueAmount(torqueValue), RandomTorqueAmount(torqueValue));
@@ -73,6 +100,8 @@ public class DiceScript : MonoBehaviour {
         hasLanded = false;
         rb.useGravity = false;
         rb.isKinematic = false;
+        readyToRoll = true;
+        diceValue = 0;
     }
 
     private float RandomTorqueAmount(Vector2 torque) {
