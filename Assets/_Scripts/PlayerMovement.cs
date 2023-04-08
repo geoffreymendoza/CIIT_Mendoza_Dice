@@ -23,8 +23,8 @@ public class PlayerMovement : MonoBehaviour {
     private void Start() {
         List<AnimationData> animDatas = new List<AnimationData>();
         var clips = anim.runtimeAnimatorController.animationClips;
-        foreach (var s in clips) {
-            AnimationData data = new( s.name, s.length );
+        foreach (var c in clips) {
+            AnimationData data = new( c.name, c.length );
             animDatas.Add(data);
         }
         foreach (var ad in animDatas.ToArray()) {
@@ -40,9 +40,8 @@ public class PlayerMovement : MonoBehaviour {
         float t = 0.75f;
         OnChangeView?.Invoke(true);
         yield return new WaitForSeconds(t);
-        anim.CrossFade(Data.TAKEOFF_ANIM, 0);
-        var data = _animDict[Data.TAKEOFF_ANIM];
-        t = data.Duration;
+        anim.ChangeAnimation(Data.TAKEOFF_ANIM);
+        t = GetAnimationDuration(Data.TAKEOFF_ANIM);
         yield return new WaitForSeconds(t);
         anim.CrossFade(Data.FLYFLOAT_ANIM, 0);
         Vector3 lastPosition = transform.position;
@@ -64,15 +63,21 @@ public class PlayerMovement : MonoBehaviour {
             path[pathIdx].ChangeToGreen();
             pathIdx++;
         }
-        anim.CrossFade(Data.LAND_ANIM, 0);
-        data = _animDict[Data.TAKEOFF_ANIM];
-        t = data.Duration;
-        t *= 0.65f;
+        anim.ChangeAnimation(Data.LAND_ANIM);
+        t = GetAnimationDuration(Data.LAND_ANIM, 0.65f);
         yield return new WaitForSeconds(t);
         anim.CrossFade(Data.IDLE_ANIM, 0);
         foreach (var tile in path)
             tile.ChangeToRed();
         OnChangeView?.Invoke(false);
+    }
+
+    private float GetAnimationDuration(int state, float speed = 1) {
+        float result = 0;
+        var data = _animDict[state];
+        result = data.Duration;
+        result *= speed;
+        return result;
     }
 
     bool AnimatorIsPlaying() {

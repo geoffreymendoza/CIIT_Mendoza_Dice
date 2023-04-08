@@ -14,6 +14,8 @@ public static class Data {
     public static readonly int InteractableLayerMask = 1 << InteractableLayer;
 }
 
+
+
 [System.Serializable]
 public class AnimationData {
     public string AnimNameString;
