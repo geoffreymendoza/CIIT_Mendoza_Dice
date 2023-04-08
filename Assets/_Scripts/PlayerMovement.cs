@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 // Movement of players using tiles
@@ -9,6 +10,7 @@ public class PlayerMovement : MonoBehaviour {
     [SerializeField] private float moveSmoothFactor = 4f;
     [SerializeField] private float speedFactor = 1f;
     [SerializeField] private float yOffset = 1.5f;
+    private Dictionary<int, AnimationData> _animDict = new Dictionary<int, AnimationData>();
 
     private void Awake() {
         TilePlacement.OnStartTravel += OnStartTravel;
@@ -19,10 +21,14 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     private void Start() {
-        // TODO save in dictionary then call it on animation
+        List<AnimationData> animDatas = new List<AnimationData>();
         var clips = anim.runtimeAnimatorController.animationClips;
         foreach (var s in clips) {
-            Debug.Log($"Anim Name: {s.name}, Duration: {s.length}");
+            AnimationData data = new( s.name, s.length );
+            animDatas.Add(data);
+        }
+        foreach (var ad in animDatas.ToArray()) {
+            _animDict[ad.AnimName] = ad;
         }
     }
 
@@ -34,9 +40,10 @@ public class PlayerMovement : MonoBehaviour {
         float t = 0.75f;
         OnChangeView?.Invoke(true);
         yield return new WaitForSeconds(t);
-        // TODO get clip based on hash name
         anim.CrossFade(Data.TAKEOFF_ANIM, 0);
-        yield return new WaitForSeconds(2.75f);
+        var data = _animDict[Data.TAKEOFF_ANIM];
+        t = data.Duration;
+        yield return new WaitForSeconds(t);
         anim.CrossFade(Data.FLYFLOAT_ANIM, 0);
         Vector3 lastPosition = transform.position;
         int pathIdx = 0;
@@ -58,14 +65,17 @@ public class PlayerMovement : MonoBehaviour {
             pathIdx++;
         }
         anim.CrossFade(Data.LAND_ANIM, 0);
-        yield return new WaitForSeconds(2.5f);
+        data = _animDict[Data.TAKEOFF_ANIM];
+        t = data.Duration;
+        t *= 0.65f;
+        yield return new WaitForSeconds(t);
         anim.CrossFade(Data.IDLE_ANIM, 0);
-        foreach (var tile in path) 
+        foreach (var tile in path)
             tile.ChangeToRed();
         OnChangeView?.Invoke(false);
     }
-    
-    bool AnimatorIsPlaying(){
+
+    bool AnimatorIsPlaying() {
         return anim.GetCurrentAnimatorStateInfo(0).normalizedTime < 1;
     }
 }

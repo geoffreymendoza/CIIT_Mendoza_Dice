@@ -14,6 +14,19 @@ public static class Data {
     public static readonly int InteractableLayerMask = 1 << InteractableLayer;
 }
 
+[System.Serializable]
+public class AnimationData {
+    public string AnimNameString;
+    public float Duration;
+    public int AnimName;
+
+    public AnimationData(string name, float duration) {
+        AnimNameString = name;
+        Duration = duration;
+        AnimName = Animator.StringToHash(AnimNameString);
+    }
+}
+
 public enum SceneID {
     Unassigned,
     MainMenu,
