@@ -10,8 +10,6 @@ public static class Data {
     public static readonly int FLYFLOAT_ANIM = Animator.StringToHash("Fly Float");
     public static readonly int LAND_ANIM = Animator.StringToHash("Land");
     
-    
-
     private static readonly int InteractableLayer = LayerMask.NameToLayer("Interactable");
     public static readonly int InteractableLayerMask = 1 << InteractableLayer;
 }

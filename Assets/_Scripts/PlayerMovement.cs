@@ -18,6 +18,14 @@ public class PlayerMovement : MonoBehaviour {
         TilePlacement.OnStartTravel -= OnStartTravel;
     }
 
+    private void Start() {
+        // TODO save in dictionary then call it on animation
+        var clips = anim.runtimeAnimatorController.animationClips;
+        foreach (var s in clips) {
+            Debug.Log($"Anim Name: {s.name}, Duration: {s.length}");
+        }
+    }
+
     private void OnStartTravel(Tile[ ] path) {
         StartCoroutine(MoveAlongPath(path));
     }
@@ -26,6 +34,7 @@ public class PlayerMovement : MonoBehaviour {
         float t = 0.75f;
         OnChangeView?.Invoke(true);
         yield return new WaitForSeconds(t);
+        // TODO get clip based on hash name
         anim.CrossFade(Data.TAKEOFF_ANIM, 0);
         yield return new WaitForSeconds(2.75f);
         anim.CrossFade(Data.FLYFLOAT_ANIM, 0);
@@ -45,11 +54,14 @@ public class PlayerMovement : MonoBehaviour {
                 yield return new WaitForEndOfFrame();
             }
             lastPosition = nextTileOffset;
+            path[pathIdx].ChangeToGreen();
             pathIdx++;
         }
         anim.CrossFade(Data.LAND_ANIM, 0);
         yield return new WaitForSeconds(2.5f);
         anim.CrossFade(Data.IDLE_ANIM, 0);
+        foreach (var tile in path) 
+            tile.ChangeToRed();
         OnChangeView?.Invoke(false);
     }
     
