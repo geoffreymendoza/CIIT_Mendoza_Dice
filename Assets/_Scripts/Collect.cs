@@ -1,41 +1,54 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using DG.Tweening;
 
 public class Collect : MonoBehaviour {
-    public List<GameObject> collectibles;
-
+    public static Action<int> OnRespawnCubes;
+    
+    [SerializeField] List<GameObject> collectibles;
+    [SerializeField] private float detectRadius = 2f;
+    [SerializeField] private Color detectColor;
+    [SerializeField] private LayerMask interactableMask;
+    
     // Start is called before the first frame update
     void Start() {
         collectibles = new List<GameObject>();
     }
 
-    float time = 0;
-    float tValue = 0;
-
     // Update is called once per frame
     void Update() {
-
-    }
-
-    // TODO change to physics collider
-    private void OnTriggerEnter(Collider other) {
-        if (!other.CompareTag("Collectibles")) return;
-        collectibles.Add(other.gameObject);
+        Core.DebugKeyPress(KeyCode.Space, RespawnCubes);
         
-        for (int i = 0; i < collectibles.Count; i++) {
-            float duration = 0.5f;
-            collectibles[i].transform.DOScale(Vector3.zero, duration);
-            collectibles[i].transform.DOJump(transform.position, 1, 1, 0.15f).SetEase(Ease.Linear);
+        Vector3 currentPos = this.transform.position;
+        var cols = Physics.OverlapSphere(currentPos, detectRadius, interactableMask);
+        if (cols.Length == 0) return;
+        foreach (var c in cols) {
+            if(collectibles.Contains(c.gameObject)) continue;
+            collectibles.Add(c.gameObject);
+            c.transform.DOScale(Vector3.zero, 0.5f);
+            c.transform.DOJump(transform.position, 1, 1, 0.15f).SetEase(Ease.Linear);
         }
-        // TODO async + object pooling
-        StartCoroutine(DisableCube(1f));
+        DisableCubes(1000);
     }
 
-    IEnumerator DisableCube(float duration) {
+    async void DisableCubes(int duration) {
+        await Task.Delay(duration);
+        foreach (var c in collectibles)
+            c.SetActive(false);
+        collectibles.Clear();
+    }
 
-        yield return new WaitForSeconds(duration);
-        collectibles.Clear(); 
+    private void RespawnCubes() {
+        Debug.Log("Respawn");
+        int amtToRespawn = ObjectPooler.SharedInstance.GetAvailableObjCount();
+        OnRespawnCubes?.Invoke(amtToRespawn);
+    }
+
+    private void OnDrawGizmos() {
+        Vector3 origin = transform.position;
+        Gizmos.color = detectColor;
+        Gizmos.DrawWireSphere(origin, detectRadius);
     }
 }

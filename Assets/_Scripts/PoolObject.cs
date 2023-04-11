@@ -1,23 +1,26 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PoolObject : MonoBehaviour {
-    // Start is called before the first frame update
-    void Start() {
-        
-    }
+    private Vector3 startPos;
+    private Vector3 startScale;
+    private bool init = false;
 
     private void OnEnable() {
-        Invoke("SelfDestroy", 3f);
+        // ResetObject();
     }
-
-    public void SelfDestroy() {
+    
+    public void Init() {
+        startPos = this.transform.position;
+        startScale = Vector3.one;
+        ResetObject();
+    }
+    
+    public void ReturnObj() {
         this.gameObject.SetActive(false);
     }
 
-    // Update is called once per frame
-    void Update() {
-
+    private void ResetObject() {
+        this.transform.position = startPos;
+        this.transform.localScale = startScale;
     }
 }

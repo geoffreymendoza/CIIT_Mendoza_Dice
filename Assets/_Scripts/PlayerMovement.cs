@@ -27,14 +27,15 @@ public class PlayerMovement : MonoBehaviour {
             AnimationData data = new( c.name, c.length );
             animDatas.Add(data);
         }
+
         foreach (var ad in animDatas.ToArray()) {
             _animDict[ad.AnimName] = ad;
         }
     }
 
     private void OnStartTravel(Tile[ ] path) {
-        //StartCoroutine(MoveAlongPath(path));
-        StartCoroutine(MoveAlongPathTest(path));
+        StartCoroutine(MoveAlongPath(path));
+        // StartCoroutine(MoveAlongPathWithNoAnim(path));
     }
 
     IEnumerator MoveAlongPath(Tile[ ] path) {
@@ -60,10 +61,12 @@ public class PlayerMovement : MonoBehaviour {
                 transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, moveSmoothFactor * delta);
                 yield return new WaitForEndOfFrame();
             }
+
             lastPosition = nextTileOffset;
             path[pathIdx].ChangeToGreen();
             pathIdx++;
         }
+
         anim.ChangeAnimation(Data.LAND_ANIM);
         t = GetAnimationDuration(Data.LAND_ANIM, 0.65f);
         yield return new WaitForSeconds(t);
@@ -73,31 +76,30 @@ public class PlayerMovement : MonoBehaviour {
         OnChangeView?.Invoke(false);
     }
 
-    IEnumerator MoveAlongPathTest(Tile[] path)
-    {
+    IEnumerator MoveAlongPathWithNoAnim(Tile[ ] path) {
         float t = 0.75f;
         OnChangeView?.Invoke(true);
         yield return new WaitForSeconds(t);
         Vector3 lastPosition = transform.position;
         int pathIdx = 0;
-        while (pathIdx < path.Length)
-        {
+        while (pathIdx < path.Length) {
             Vector3 nextTile = path[pathIdx].transform.position;
             float lerpVal = 0;
             Vector3 nextTileOffset = nextTile + new Vector3(0, yOffset, 0);
             Vector3 vecToTarget = nextTileOffset - transform.position;
             Quaternion targetRot = Quaternion.LookRotation(vecToTarget, transform.up);
-            while (lerpVal < 1)
-            {
+            while (lerpVal < 1) {
                 float delta = Time.deltaTime;
                 lerpVal += delta * speedFactor;
                 transform.position = Vector3.Lerp(lastPosition, nextTileOffset, lerpVal);
                 transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, moveSmoothFactor * delta);
                 yield return new WaitForEndOfFrame();
             }
+
             lastPosition = nextTileOffset;
             pathIdx++;
         }
+
         OnChangeView?.Invoke(false);
     }
 

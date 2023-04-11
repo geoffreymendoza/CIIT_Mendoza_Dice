@@ -6,14 +6,11 @@ public class ObjectPooler : MonoBehaviour {
     public static ObjectPooler SharedInstance;
     public List<GameObject> PoolObjs;
     public GameObject ObjToPool;
-    public int amtToPool = 100;
+    public int amtToPool = 50;
 
     private void Awake() {
         SharedInstance = this;
-    }
-
-    // Start is called before the first frame update
-    void Start() {
+        
         PoolObjs = new List<GameObject>();
         GameObject tmp;
 
@@ -33,8 +30,21 @@ public class ObjectPooler : MonoBehaviour {
         return null;
     }
 
-    // Update is called once per frame
-    void Update() {
+    public int GetAvailableObjCount() {
+        int result = 0;
+        for (int i = 0; i < amtToPool; i++) {
+            if (!PoolObjs[i].activeInHierarchy)
+                result++;
+        }
+        return result;
+    }
 
+    public GameObject[ ] GetAvailableObjects() {
+        List<GameObject> goList = new List<GameObject>();
+        for (int i = 0; i < amtToPool; i++) {
+            if (!PoolObjs[i].activeInHierarchy)
+                goList.Add( PoolObjs[i]);
+        }
+        return goList.ToArray();
     }
 }
