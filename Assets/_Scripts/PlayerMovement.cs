@@ -33,7 +33,8 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     private void OnStartTravel(Tile[ ] path) {
-        StartCoroutine(MoveAlongPath(path));
+        //StartCoroutine(MoveAlongPath(path));
+        StartCoroutine(MoveAlongPathTest(path));
     }
 
     IEnumerator MoveAlongPath(Tile[ ] path) {
@@ -69,6 +70,34 @@ public class PlayerMovement : MonoBehaviour {
         anim.CrossFade(Data.IDLE_ANIM, 0);
         foreach (var tile in path)
             tile.ChangeToRed();
+        OnChangeView?.Invoke(false);
+    }
+
+    IEnumerator MoveAlongPathTest(Tile[] path)
+    {
+        float t = 0.75f;
+        OnChangeView?.Invoke(true);
+        yield return new WaitForSeconds(t);
+        Vector3 lastPosition = transform.position;
+        int pathIdx = 0;
+        while (pathIdx < path.Length)
+        {
+            Vector3 nextTile = path[pathIdx].transform.position;
+            float lerpVal = 0;
+            Vector3 nextTileOffset = nextTile + new Vector3(0, yOffset, 0);
+            Vector3 vecToTarget = nextTileOffset - transform.position;
+            Quaternion targetRot = Quaternion.LookRotation(vecToTarget, transform.up);
+            while (lerpVal < 1)
+            {
+                float delta = Time.deltaTime;
+                lerpVal += delta * speedFactor;
+                transform.position = Vector3.Lerp(lastPosition, nextTileOffset, lerpVal);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, moveSmoothFactor * delta);
+                yield return new WaitForEndOfFrame();
+            }
+            lastPosition = nextTileOffset;
+            pathIdx++;
+        }
         OnChangeView?.Invoke(false);
     }
 
